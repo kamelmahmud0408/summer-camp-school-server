@@ -30,7 +30,8 @@ async function run() {
     const classesCollection= client.db('sportsDb').collection('classes')
 
     app.get('/classes', async(req,res)=>{
-        const result= await classesCollection.find().toArray()
+        // const sort= parseInt(req.query.sort);
+        const result= await classesCollection.find().sort({number_of_students: -1}).toArray()
         res.send(result)
     })
 
