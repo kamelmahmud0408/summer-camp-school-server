@@ -28,11 +28,33 @@ async function run() {
     await client.connect();
 
     const classesCollection= client.db('sportsDb').collection('classes')
+    const enrolledCollection= client.db('sportsDb').collection('enrolled')
 
+    
+  // classes
     app.get('/classes', async(req,res)=>{
-        // const sort= parseInt(req.query.sort);
+        
         const result= await classesCollection.find().sort({number_of_students: -1}).toArray()
         res.send(result)
+    })
+
+    // enrolledcollection
+
+    app.get('/enrolled', async(req,res)=>{
+      const email= req.query.email;
+      console.log(email)
+      if(!email){
+        res.send([])
+      }
+      const query = {email: email};
+      const result=await enrolledCollection.find(query).toArray()
+      res.send(result)
+    })
+
+    app.post('/enrolled', async(req,res)=>{
+      const item =req.body;
+      const result= await enrolledCollection.insertOne(item)
+      res.send(result)
     })
 
 
