@@ -2,7 +2,7 @@ const express = require('express');
 const app= express()
 const cors = require('cors');
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port =process.env.PORT || 5000;
 
 app.use(cors())
@@ -26,9 +26,29 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
-
+    
+    const usersCollection= client.db('sportsDb').collection('users')
     const classesCollection= client.db('sportsDb').collection('classes')
     const enrolledCollection= client.db('sportsDb').collection('enrolled')
+
+  // users
+
+  app.get('/users',  async (req, res) => {
+    const result = await usersCollection.find().toArray()
+    res.send(result)
+  })
+
+
+  app.post('/users', async (req, res) => {
+    const user = req.body;
+    const query = { email: user.email }
+    const existingUser = await usersCollection.findOne(query)
+    if (existingUser) {
+      return res.send({ message: 'User already exist' })
+    }
+    const result = await usersCollection.insertOne(user)
+    res.send(result)
+  })
 
     
   // classes
@@ -42,7 +62,7 @@ async function run() {
 
     app.get('/enrolled', async(req,res)=>{
       const email= req.query.email;
-      console.log(email)
+      
       if(!email){
         res.send([])
       }
@@ -54,6 +74,13 @@ async function run() {
     app.post('/enrolled', async(req,res)=>{
       const item =req.body;
       const result= await enrolledCollection.insertOne(item)
+      res.send(result)
+    })
+
+    app.delete('/enrolleddelete/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await enrolledCollection.deleteOne(query)
       res.send(result)
     })
 
