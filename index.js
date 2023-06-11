@@ -1,6 +1,7 @@
 const express = require('express');
 const app= express()
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port =process.env.PORT || 5000;
@@ -31,6 +32,18 @@ async function run() {
     const classesCollection= client.db('sportsDb').collection('classes')
     const enrolledCollection= client.db('sportsDb').collection('enrolled')
 
+   // JWT
+    
+    app.post('/jwt', (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '1h'
+      })
+      res.send({ token })
+    })
+
+
+
   // users
 
   app.get('/users',  async (req, res) => {
@@ -50,6 +63,17 @@ async function run() {
     res.send(result)
   })
 
+  app.patch('/users/admin/:id', async (req, res) => {
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) }
+    const updateDoc = {
+      $set: {
+        role: 'admin'
+      },
+    };
+    const result = await usersCollection.updateOne(filter, updateDoc)
+    res.send(result)
+  })
     
   // classes
     app.get('/classes', async(req,res)=>{
