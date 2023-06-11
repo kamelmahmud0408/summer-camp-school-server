@@ -156,15 +156,52 @@ async function run() {
     })
 
     // classes
-    app.get('/classes', async (req, res) => {
+
+    app.get('/class', async (req, res) => {
 
       const result = await classesCollection.find().sort({ number_of_students: -1 }).toArray()
+      res.send(result)
+    })
+    app.get('/class/:id', async (req, res) => {
+      const id= req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await classesCollection.findOne(query)
+      res.send(result)
+    })
+
+    app.get('/myclass', async (req, res) => {
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email }
+      }
+      const result = await classesCollection.find(query).toArray();
       res.send(result)
     })
 
     app.post('/class', async(req,res)=>{
       const newClass=req.body;
       const result = await classesCollection.insertOne(newClass)
+      res.send(result)
+    })
+
+    app.put('/class/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true }
+      const updatedClass = req.body;
+      const newUpdateClass = {
+        $set: {
+          className: updatedClass.className,
+          image: updatedClass.image,
+          instructorName: updatedClass.instructorName,
+          email: updatedClass.email,
+          price: updatedClass.price,
+          available_seates: updatedClass.available_seates,
+          
+        }
+      };
+      const result = await classesCollection.updateOne(filter, newUpdateClass, options)
       res.send(result)
     })
 
