@@ -162,6 +162,12 @@ async function run() {
       res.send(result)
     })
 
+    app.post('/class', async(req,res)=>{
+      const newClass=req.body;
+      const result = await classesCollection.insertOne(newClass)
+      res.send(result)
+    })
+
     // selectedcollection
 
     app.get('/selected', verifyJWT, async (req, res) => {
