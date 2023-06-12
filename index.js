@@ -3,6 +3,7 @@ const app = express()
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config()
+const stripe = require('stripe')(process.env.PAYMENT_SECRET)
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
@@ -83,8 +84,8 @@ async function run() {
     }
 
     // users
-
-    app.get('/users', verifyJWT, verifyAdmin,verifyInstructor, async (req, res) => {
+  //  verifyInstructor,
+    app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray()
       res.send(result)
     })
@@ -157,11 +158,23 @@ async function run() {
 
     // classes
 
+    // app.get('/class', async (req, res) => {
+    //   console.log(req.params.text)
+    //    {
+    //     const result = await classesCollection.find().sort({ 
+    //       available_seates: -1 }).toArray()
+    //     console.log(result)
+    //     return res.send(result)
+    //   }
+    // })
+
+
     app.get('/class', async (req, res) => {
 
-      const result = await classesCollection.find().sort({ number_of_students: -1 }).toArray()
+      const result = await classesCollection.find().sort({ available_seates: -1 }).toArray()
       res.send(result)
     })
+
     app.get('/class/:id', async (req, res) => {
       const id= req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -211,6 +224,18 @@ async function run() {
       const updateDoc = {
         $set: {
           status: 'approved'
+        },
+      };
+      const result = await classesCollection.updateOne(filter, updateDoc)
+      res.send(result)
+    })
+
+    app.patch('/class/deny/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          status: 'denied'
         },
       };
       const result = await classesCollection.updateOne(filter, updateDoc)
