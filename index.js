@@ -73,24 +73,25 @@ async function run() {
     }
   // verify instructor
 
-    const verifyInstructor= async (req, res, next) => {
-      const email = req.decoded.email;
-      const query = { email: email }
-      const user = await usersCollection.findOne(query);
-      if (user?.role !== 'instructor') {
-        return res.status(403).send({ error: true, message: 'forbidden user' });
-      }
-      next();
-    }
+    
 
     // users
-  //  verifyInstructor,
+  
     app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
+      const instructor=req.body.role;
+      console.log(instructor)
+      
       const result = await usersCollection.find().toArray()
       res.send(result)
     })
 
+    app.get('/usersInstructor', async (req, res) => {
+      const filter = { role: 'instructor' }
+      const result = await usersCollection.find(filter).toArray()
+      res.send(result)
+    })
 
+    
     app.post('/users', async (req, res) => {
       const user = req.body;
       const query = { email: user.email }
@@ -158,20 +159,15 @@ async function run() {
 
     // classes
 
-    // app.get('/class', async (req, res) => {
-    //   console.log(req.params.text)
-    //    {
-    //     const result = await classesCollection.find().sort({ 
-    //       available_seates: -1 }).toArray()
-    //     console.log(result)
-    //     return res.send(result)
-    //   }
-    // })
-
+    app.get('/mangeclass', async (req, res) => { 
+      const result = await classesCollection.find().sort({ available_seates: -1 }).toArray()
+      res.send(result)
+    })
+    
 
     app.get('/class', async (req, res) => {
-
-      const result = await classesCollection.find().sort({ available_seates: -1 }).toArray()
+      const query = { status: 'approved' }
+      const result = await classesCollection.find(query).sort({ available_seates: -1 }).toArray()
       res.send(result)
     })
 
@@ -196,6 +192,8 @@ async function run() {
       const result = await classesCollection.insertOne(newClass)
       res.send(result)
     })
+
+   
 
     app.put('/class/:id', async (req, res) => {
       const id = req.params.id;
@@ -241,7 +239,8 @@ async function run() {
       const result = await classesCollection.updateOne(filter, updateDoc)
       res.send(result)
     })
-
+    
+    
     // selectedcollection
 
     app.get('/selected', verifyJWT, async (req, res) => {
@@ -293,6 +292,15 @@ async function run() {
       res.send({
         clientSecret: paymentIntent.client_secret
       })
+    })
+
+    app.get('/payments', async (req, res) => {
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email }
+      }
+      const result = await paymantsCollection.find(query).sort({ date: -1 }).toArray()
+      res.send(result)
     })
 
     app.post('/payments', verifyJWT, async (req, res) => {
